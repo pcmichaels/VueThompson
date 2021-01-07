@@ -1,0 +1,94 @@
+<template>
+  <Player
+      v-bind:location="location">
+  </Player>
+
+  <Timer 
+      v-bind:seconds="secondsRemaining">
+  </Timer>            
+</template>
+
+<script>
+import Player from './components/Player.vue'
+import Timer from './components/Timer.vue'
+
+export default {
+  name: 'App',
+
+  components: {    
+    Player,
+    Timer
+  },
+
+  data: function() {                    
+    return {
+      playerX: 100,
+      playerY: 100,
+      speed: 0,
+      toggleSpeed: 1,                    
+      startTime: 0,
+      timeNow: 0
+    };
+  },
+
+  created() {
+      window.addEventListener('keydown', this.onKeyDown);
+  },
+
+  computed: {                    
+      location: function() {
+          return 'width:10px; height:10px; left:' + this.playerX + 'px; top:' + this.playerY + 'px; border:1px solid #000; position: absolute;';
+      },
+
+      secondsRemaining: function() {
+          const diff = (this.startTime - this.timeNow) / 1000;
+          return Math.round(diff);
+      }
+  },
+
+  methods: {
+      init() {
+          setInterval(this.update, 10);
+          this.startTime = new Date();
+          this.startTime.setSeconds(this.startTime.getSeconds() + 20);
+      },
+
+      onKeyDown(e) {                        
+          switch (e.which) {
+              case 37: // Left
+                  this.playerRun(1); 
+                  break;
+              case 39: // Right
+                  this.playerRun(2); 
+                  break;
+              default:
+                  break;
+          }
+      },
+      
+      playerRun(toggle) {                        
+          if (this.toggleSpeed !== toggle) {                           
+              this.speed += 0.12;
+              this.toggleSpeed = toggle;
+          }
+      },                  
+
+      update() {
+          this.playerX += this.speed;
+
+          if (this.speed > 0) {
+              this.speed -= 0.01;
+          } else {
+              this.speed = 0;
+          }
+
+          this.timeNow = new Date().getTime();
+      }
+  },
+
+  mounted() {
+      this.init();
+  }
+}
+</script>
+
