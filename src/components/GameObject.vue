@@ -6,8 +6,9 @@
 
 <script>
 export default {
-  name: 'Player',
+  name: 'GameObject',
   props: {
+    type: String,
     location: String
   }
 }
