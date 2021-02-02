@@ -1,6 +1,6 @@
 <template>
     <div v-bind:style="location">
-        <img :src="image" />
+        <img v-bind:src="image" />
     </div>
 </template>
 
