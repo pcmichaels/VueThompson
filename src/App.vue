@@ -1,29 +1,36 @@
 <template>
-    <GameObject
-        v-bind:location="playerLocation"
-        type="player">
-    </GameObject>
-
-    <Timer 
-        v-bind:seconds="secondsRemaining">
-    </Timer>
-
-    <GameObject
-        v-bind:location="finishLineLocation"
-        type="finishline">
-    </GameObject>
-
     <GameFinished 
         v-if="isGameFinished" v-bind:isWon="playerWon">
     </GameFinished>
+
+    <div v-else>
+        <GameObject
+            v-bind:location="playerLocation"
+            type="player"
+            v-bind:image="playerImage">
+        </GameObject>
+
+        <Timer 
+            v-bind:seconds="secondsRemaining">
+        </Timer>
+
+        <GameObject
+            v-bind:location="finishLineLocation"
+            type="finishline">
+        </GameObject>
+    </div>
+
 </template>
 
 <script>
-    import GameObject from './components/GameObject.vue';
-    import Timer from './components/Timer.vue';
-    import GameFinished from './components/GameFinished.vue';
+import GameObject from './components/GameObject.vue';
+import Timer from './components/Timer.vue';
+import GameFinished from './components/GameFinished.vue';
 
-    export default {
+const images = [ "daley-1.png", "daley-2.png", "daley-3.png" ];
+let lastSwitch = (new Date()).getTime();
+
+export default {
     name: 'App',
 
     components: {    
@@ -41,7 +48,11 @@
             startTime: 0,
             timeNow: 0,
             finishLine: 500,
-            isGameFinished: false
+            isGameFinished: false,
+            lastPressed: 0,
+            playerWon: false,
+            interval: 0,
+            currentImageIdx: 0            
         };
     },
 
@@ -51,7 +62,11 @@
 
     computed: {                    
         playerLocation: function() {
-            return 'width:10px; height:10px; left:' + this.playerX + 'px; top:' + this.playerY + 'px; border:1px solid #000; position: absolute;';
+            return 'width:100px; height:100px; left:' + this.playerX + 'px; top:' + this.playerY + 'px; position: absolute;';
+        },
+
+        playerImage: function() {                        
+            return require("./assets/" + images[this.currentImageIdx]);
         },
 
         finishLineLocation: function() {
@@ -61,21 +76,23 @@
         secondsRemaining: function() {
             const diff = (this.startTime - this.timeNow) / 1000;
             return Math.round(diff);
-        },
-
-        playerWon: function() {
-            return this.isGameFinished && (this.secondsRemaining > 0);
         }
     },
 
     methods: {
         init() {
-            setInterval(this.update, 10);
+            this.interval = setInterval(this.update, 10);
             this.startTime = new Date();
             this.startTime.setSeconds(this.startTime.getSeconds() + 20);
         },
 
-        onKeyDown(e) {                        
+        onKeyDown(e) {      
+            if (this.lastPressed + 50 > Date.now()) {
+                return;
+            } else {
+                this.lastPressed = Date.now();
+            }
+
             switch (e.which) {
                 case 37: // Left
                     this.playerRun(1); 
@@ -105,10 +122,27 @@
             }
 
             this.timeNow = new Date().getTime();
-
-            // Collision check
+            
             if (this.playerX > this.finishLine) {
                 this.isGameFinished = true;
+                this.playerWon = this.isGameFinished && (this.secondsRemaining > 0);
+                clearInterval(this.interval);
+            }
+
+            if (this.secondsRemaining <= 0) {
+                this.isGameFinished = true;
+                this.playerWon = this.isGameFinished && (this.secondsRemaining > 0);
+                clearInterval(this.interval);
+            }
+
+            if (this.speed > 0) {
+                const refreshSpeed = 1000 - (this.speed * 3);
+                if ((new Date()).getTime() > lastSwitch + refreshSpeed) {
+                    this.currentImageIdx = 
+                        (this.currentImageIdx < images.length - 1) 
+                            ? this.currentImageIdx + 1 : 0;
+                    lastSwitch = new Date().getTime();
+                }
             }
         }
     },
